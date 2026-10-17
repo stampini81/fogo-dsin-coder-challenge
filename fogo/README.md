@@ -13,16 +13,21 @@ Um único sistema web cobre as três partes do desafio:
 
 ---
 
-## ▶️ Como rodar (1 comando)
+## ▶️ Como rodar
 
-Requisito: **Node.js 18 ou superior** (testado no 22). Não há `npm install`: o projeto **não tem dependências**.
+Requisito: **Node.js 18 ou superior** (testado no 22). Não é necessário executar `npm install`: o servidor usa módulos nativos do Node.js e as bibliotecas visuais já estão incluídas no projeto.
+
+No terminal, a partir da raiz do repositório:
 
 ```bash
+cd fogo
 node server.js
 # abra http://localhost:3000
 ```
 
-Na primeira execução o sistema gera a cidade: inventário, agentes e 120 dias de histórico. Os dados ficam salvos em `data/fogo-db.json`.
+Abra **http://localhost:3000** no navegador. Mantenha o terminal aberto enquanto usa o sistema. Para encerrar, pressione **Ctrl + C**.
+
+Na primeira execução o sistema gera a cidade: inventário, agentes e 120 dias de histórico. Os dados ficam salvos em `data/fogo-db.json`, dentro da pasta `fogo`, e são ignorados pelo Git. Os comandos abaixo devem ser executados na pasta `fogo`.
 
 | Comando | Efeito |
 |---|---|
@@ -32,7 +37,26 @@ Na primeira execução o sistema gera a cidade: inventário, agentes e 120 dias 
 | `PORT=8080 node server.js` | muda a porta |
 | `FOGO_SIM_SPEED=120 node server.js` | acelera os eventos simulados (padrão 60×) |
 
-Leaflet, Chart.js e leaflet.heat vêm junto em `public/vendor`. Só os blocos do mapa (CARTO/OpenStreetMap), a fonte e a busca de CEP (ViaCEP) usam internet.
+Os dois últimos comandos usam sintaxe de Bash. No **PowerShell**, para alterar a porta ou a velocidade da simulação, defina a variável antes de iniciar o servidor:
+
+```powershell
+$env:PORT = '8080'
+node server.js
+# abra http://localhost:8080
+```
+
+```powershell
+$env:FOGO_SIM_SPEED = '120'
+node server.js
+```
+
+Leaflet, Chart.js e leaflet.heat vêm junto em `public/vendor`. Só os blocos do mapa (OpenStreetMap, sem chave de API), a fonte e a busca de CEP (ViaCEP) usam internet.
+
+O mapa usa a camada padrão clara do OpenStreetMap na Central de Operações, na seleção de localização e na Cidade Preditiva. Se uma versão antiga exibir "API KEY REQUIRED", atualize a página com **Ctrl + F5** para carregar a configuração corrigida.
+
+## Tecnologias utilizadas
+
+HTML5, CSS3, JavaScript, Node.js, API REST, Server-Sent Events (SSE), Leaflet, leaflet.heat, Chart.js, OpenStreetMap, ViaCEP, JSON, Git e GitHub. Testes com `node:test` e `node:assert`.
 
 ### Roteiro de demonstração (2 minutos)
 1. **Central de Operações**: veja agentes e veículos se movendo e as ocorrências sendo despachadas ao agente livre mais próximo.
@@ -135,7 +159,7 @@ O motor preditivo **não lê esses parâmetros**. Ele precisa redescobri-los a p
 ---
 
 ## 🤖 Uso de IA
-Desenvolvido com auxílio do **Claude (Anthropic)**, conforme pede o regulamento.
+Desenvolvido com auxílio do **Claude (Anthropic)**, conforme pede o regulamento. A correção da camada do mapa e a atualização da documentação contaram também com auxílio do **Codex (OpenAI)**.
 
 ## 🧪 Testes
 ```bash
