@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>F.O.G.O. — Central de Operações</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/vendor/leaflet.css">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="flame">🔥</span><div><strong>F.O.G.O.</strong><small>Ferramenta Onisciente de Gestão e Operações</small></div></div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-view="central">Central de Operações</button>
+      <button class="tab" data-view="inventario">Inventário</button>
+      <button class="tab" data-view="preditiva">Cidade Preditiva</button>
+      <button class="tab" data-view="sobre">Sobre</button>
+    </nav>
+    <div class="top-right">
+      <div class="dropdown">
+        <button class="btn ghost" id="btn-sim">⚡ Simular evento ▾</button>
+        <div class="menu" id="sim-menu">
+          <button data-sim="acidente-grave">💥 Acidente grave</button>
+          <button data-sim="apagao">🔌 Apagão no Centro</button>
+          <button data-sim="furto">🦹 Furto de equipamento</button>
+          <button data-sim="sensor-travado">📡 Sensor de radar travado</button>
+        </div>
+      </div>
+      <span class="live" id="live"><i></i><span>conectando…</span></span>
+      <span class="clock" id="clock">--:--:--</span>
+    </div>
+  </header>
+
+  <!-- ===================== CENTRAL ===================== -->
+  <main id="view-central" class="view active">
+    <section class="kpis" id="kpis"></section>
+    <div class="central-grid">
+      <aside class="panel filters" id="filters">
+        <h3>Filtros</h3>
+        <label>Busca<input type="search" id="f-q" placeholder="ID, série, placa, rua…"></label>
+        <label>Região<select id="f-regiao" multiple size="5"></select></label>
+        <label>Bairro<select id="f-bairro" multiple size="6"></select></label>
+        <label>Situação<select id="f-situacao" multiple size="6"></select></label>
+        <label>Órgão responsável<select id="f-orgao" multiple size="5"></select></label>
+        <div class="field-title">Tipo de equipamento</div>
+        <div class="chips" id="f-tipo"></div>
+        <label class="check"><input type="checkbox" id="f-manut"> Só com manutenção imediata ou próxima (7 dias)</label>
+        <div class="field-title">Camadas</div>
+        <label class="check"><input type="checkbox" data-layer="equipamentos" checked> Equipamentos</label>
+        <label class="check"><input type="checkbox" data-layer="agentes" checked> Agentes</label>
+        <label class="check"><input type="checkbox" data-layer="ocorrencias" checked> Ocorrências ao vivo</label>
+        <label class="check"><input type="checkbox" data-layer="saude" checked> Saúde dos bairros</label>
+        <label class="check"><input type="checkbox" data-layer="calor"> Mapa de calor (30 dias)</label>
+        <button class="btn ghost full" id="f-clear">Limpar filtros</button>
+      </aside>
+      <section class="map-wrap">
+        <div id="map"></div>
+        <div class="legend" id="legend"></div>
+      </section>
+      <aside class="panel alerts">
+        <div class="panel-head"><h3>Alertas</h3><span class="badge" id="alert-count">0</span></div>
+        <div class="alert-filter">
+          <button class="pill active" data-al="all">Todos</button>
+          <button class="pill" data-al="critico">Críticos</button>
+          <button class="pill" data-al="alto">Altos</button>
+        </div>
+        <ul id="alerts" class="alert-list"></ul>
+      </aside>
+    </div>
+    <section class="below">
+      <div class="panel">
+        <div class="panel-head"><h3>Saúde por região</h3><span class="muted">pontuação 0–100: equipamentos fora do ar, ocorrências, alertas e efetivo</span></div>
+        <div class="regions" id="regions"></div>
+      </div>
+      <div class="panel two">
+        <div><h3>Situação dos equipamentos</h3><div class="chart-box"><canvas id="ch-status"></canvas></div></div>
+        <div><h3>Disponibilidade por tipo</h3><div class="chart-box"><canvas id="ch-types"></canvas></div></div>
+      </div>
+      <div class="panel two">
+        <div><h3>🔧 Manutenção imediata</h3><ul class="mini-list" id="m-imediata"></ul></div>
+        <div><h3>📅 Manutenção vencida ou nos próximos 7 dias</h3><ul class="mini-list" id="m-proxima"></ul></div>
+      </div>
+      <div class="panel">
+        <h3>Ocorrências em andamento</h3>
+        <div class="table-wrap"><table class="table" id="t-live"><thead><tr><th>ID</th><th>Tipo</th><th>Severidade</th><th>Bairro</th><th>Início</th><th>Situação</th><th>Agentes</th></tr></thead><tbody></tbody></table></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== INVENTÁRIO ===================== -->
+  <main id="view-inventario" class="view">
+    <div class="subtabs">
+      <button class="pill active" data-inv="equipamentos">Equipamentos</button>
+      <button class="pill" data-inv="agentes">Agentes</button>
+    </div>
+    <section class="panel" id="inv-equipamentos">
+      <div class="toolbar">
+        <input type="search" id="eq-q" placeholder="Buscar por ID, série, marca, rua, placa…">
+        <select id="eq-tipo"><option value="">Todos os tipos</option></select>
+        <select id="eq-sit"><option value="">Todas as situações</option></select>
+        <select id="eq-bairro"><option value="">Todos os bairros</option></select>
+        <span class="spacer"></span>
+        <a class="btn ghost" id="eq-csv" href="/api/equipments.csv">⬇ CSV</a>
+        <button class="btn primary" id="eq-new">+ Novo equipamento</button>
+      </div>
+      <div class="table-wrap"><table class="table" id="t-eq"><thead><tr><th>ID</th><th>Tipo</th><th>Marca / modelo</th><th>Nº série</th><th>Local</th><th>Situação</th><th>Próx. manutenção</th><th></th></tr></thead><tbody></tbody></table></div>
+      <div class="pager" id="eq-pager"></div>
+    </section>
+    <section class="panel hidden" id="inv-agentes">
+      <div class="toolbar">
+        <input type="search" id="ag-q" placeholder="Buscar por nome ou matrícula…">
+        <select id="ag-tipo"><option value="">Todos os tipos</option></select>
+        <select id="ag-sit"><option value="">Todas as situações</option></select>
+        <span class="spacer"></span>
+        <button class="btn primary" id="ag-new">+ Novo agente</button>
+      </div>
+      <div class="table-wrap"><table class="table" id="t-ag"><thead><tr><th>Matrícula</th><th>Nome</th><th>Tipo</th><th>Órgão</th><th>Turno</th><th>Base</th><th>Situação</th><th>Veículo</th><th></th></tr></thead><tbody></tbody></table></div>
+    </section>
+  </main>
+
+  <!-- ===================== PREDITIVA ===================== -->
+  <main id="view-preditiva" class="view">
+    <section class="panel hero">
+      <div>
+        <h2>Cidade Preditiva</h2>
+        <p class="muted">PROMETHEUS já enxerga o presente. Aqui ele estima o que deve acontecer nas próximas horas e dias — e diz o que fazer a respeito.</p>
+      </div>
+      <div class="hero-metrics" id="pred-metrics"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3>🧭 Recomendações para agora</h3><span class="muted" id="pred-time"></span></div>
+      <ul class="recs" id="recs"></ul>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3>🔥 Risco de ocorrências nas próximas 24 h</h3><button class="info" data-explain="risco">como funciona?</button></div>
+      <div class="explain hidden" id="ex-risco"></div>
+      <div class="pred-grid">
+        <div>
+          <div class="slider-row"><span>Horário:</span><input type="range" id="risk-hour" min="0" max="23" value="0"><strong id="risk-hour-label">agora</strong></div>
+          <div id="risk-map"></div>
+        </div>
+        <div class="table-wrap"><table class="table compact" id="t-risk"><thead><tr><th>Bairro</th><th>Índice</th><th>Esperadas 24 h</th><th>P(≥1) 4 h</th><th>Pico</th><th>Tendência</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <p class="muted small" id="risk-validation"></p>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3>🗓️ Padrão semanal (taxa esperada de ocorrências por hora)</h3><select id="hm-bairro"><option value="">Cidade inteira</option></select></div>
+      <div class="heatmap" id="heatmap"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3>👮 Reforço de efetivo — próximas 12 h</h3><button class="info" data-explain="reforco">como funciona?</button></div>
+      <div class="explain hidden" id="ex-reforco"></div>
+      <div class="windows" id="reinf"></div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3>🔧 Risco de falha de equipamentos</h3><button class="info" data-explain="falhas">como funciona?</button></div>
+      <div class="explain hidden" id="ex-falhas"></div>
+      <div class="pred-grid">
+        <div class="table-wrap tall"><table class="table compact" id="t-fail"><thead><tr><th>Equipamento</th><th>Bairro</th><th>7 dias</th><th>30 dias</th><th>Motivos</th></tr></thead><tbody></tbody></table></div>
+        <div>
+          <div class="model-card" id="fail-model"></div>
+          <div class="chart-box" style="height:220px"><canvas id="ch-fail"></canvas></div>
+        </div>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3>📉 Tendência de disponibilidade do parque</h3><button class="info" data-explain="disponibilidade">como funciona?</button></div>
+      <div class="explain hidden" id="ex-disponibilidade"></div>
+      <div class="pred-grid">
+        <div class="chart-box" style="height:300px"><canvas id="ch-avail"></canvas></div>
+        <div class="model-card" id="avail-card"></div>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-head"><h3>🛰️ Anomalias de telemetria detectadas</h3><button class="info" data-explain="anomalias">como funciona?</button></div>
+      <div class="explain hidden" id="ex-anomalias"></div>
+      <div class="table-wrap"><table class="table compact" id="t-anom"><thead><tr><th>Quando</th><th>Equipamento</th><th>Bairro</th><th>Métrica</th><th>Valor</th><th>Esperado</th><th>z</th></tr></thead><tbody></tbody></table></div>
+    </section>
+  </main>
+
+  <!-- ===================== SOBRE ===================== -->
+  <main id="view-sobre" class="view">
+    <section class="panel prose" id="about"></section>
+  </main>
+
+  <!-- drawer de detalhes -->
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <button class="close" id="drawer-close" aria-label="Fechar">✕</button>
+    <div id="drawer-body"></div>
+  </aside>
+
+  <!-- modal de formulário -->
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head"><h3 id="modal-title">Cadastro</h3><button class="close" id="modal-close">✕</button></div>
+      <form id="modal-form" novalidate></form>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+
+  <script src="/vendor/leaflet.js"></script>
+  <script src="/vendor/leaflet-heat.js"></script>
+  <script src="/vendor/chart.umd.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
