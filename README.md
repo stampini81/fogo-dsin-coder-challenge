@@ -13,6 +13,28 @@ Um único sistema web cobre as três partes do desafio:
 
 ---
 
+## 📸 Telas do sistema
+
+Capturas da aplicação em execução com dados simulados.
+
+### Central de Operações
+
+Indicadores de disponibilidade, filtros, equipamentos e agentes no mapa, com alertas de telemetria em tempo real.
+
+![Central de Operações com indicadores, mapa OpenStreetMap, filtros e alertas](docs/screenshots/central-operacoes.png)
+
+### Saúde por região e manutenção
+
+Pontuação de saúde dos bairros e regiões, gráficos de situação e disponibilidade dos equipamentos e acompanhamento das manutenções.
+
+![Saúde por região, gráficos dos equipamentos e listas de manutenção imediata e prevista](docs/screenshots/saude-regioes-manutencao.png)
+
+### Ocorrências
+
+Acompanhamento das ocorrências com tipo, severidade, bairro, horário de início, situação e agentes responsáveis.
+
+![Tabela de ocorrências com severidade, bairro, situação e agentes responsáveis](docs/screenshots/ocorrencias.png)
+
 ## ▶️ Como rodar
 
 Requisito: **Node.js 18 ou superior** (testado no 22). Não é necessário executar `npm install`: o servidor usa módulos nativos do Node.js e as bibliotecas visuais já estão incluídas no projeto.
